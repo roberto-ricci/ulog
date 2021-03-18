@@ -101,7 +101,6 @@ const char *ulog_level_name(ulog_level_t severity) {
    case ULOG_WARNING_LEVEL: return "WARNING";
    case ULOG_ERROR_LEVEL: return "ERROR";
    case ULOG_CRITICAL_LEVEL: return "CRITICAL";
-   case ULOG_ALWAYS_LEVEL: return "ALWAYS";
    default: return "UNKNOWN";
   }
 }

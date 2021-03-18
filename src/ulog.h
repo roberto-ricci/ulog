@@ -68,13 +68,13 @@ extern "C" {
     #endif
 
 typedef enum {
-  ULOG_TRACE_LEVEL=100,
+  ULOG_TRACE_LEVEL,
   ULOG_DEBUG_LEVEL,
   ULOG_INFO_LEVEL,
   ULOG_WARNING_LEVEL,
   ULOG_ERROR_LEVEL,
   ULOG_CRITICAL_LEVEL,
-  ULOG_ALWAYS_LEVEL
+  ULOG_LEVEL_N
 } ulog_level_t;
 
 // Unless ULOG_ENABLED is defined at compile time, all logging is disabled and
@@ -95,7 +95,6 @@ typedef enum {
   #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __VA_ARGS__)
   #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __VA_ARGS__)
   #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __VA_ARGS__)
-  #define ULOG_ALWAYS(...) ulog_message(ULOG_ALWAYS_LEVEL, __VA_ARGS__)
 #else
   // uLog vanishes when disabled at compile time...
   #define ULOG_INIT() do {} while(0)
@@ -109,7 +108,6 @@ typedef enum {
   #define ULOG_WARNING(f, ...) do {} while(0)
   #define ULOG_ERROR(f, ...) do {} while(0)
   #define ULOG_CRITICAL(f, ...) do {} while(0)
-  #define ULOG_ALWAYS(f, ...) do {} while(0)
 #endif
 
 typedef enum {
@@ -122,7 +120,7 @@ typedef enum {
 #define ULOG_MAX_SUBSCRIBERS 6
 
 // maximum length of formatted log message
-#define ULOG_MAX_MESSAGE_LENGTH 120
+#define ULOG_MAX_MESSAGE_LENGTH 128
 
 /**
  * @brief: prototype for uLog subscribers.
