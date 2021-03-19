@@ -52,6 +52,7 @@ typedef struct {
 
 static subscriber_t s_subscribers[ULOG_MAX_SUBSCRIBERS];
 static char s_message[ULOG_MAX_MESSAGE_LENGTH];
+bool quite = false;
 
 // =============================================================================
 // user-visible code
@@ -106,11 +107,18 @@ const char *ulog_level_name(ulog_level_t severity) {
   }
 }
 
+void ulog_set_quite(bool set) {
+  quite = set;
+}
+
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)
 void ulog_message(ulog_level_t severity, const char *fmt, ...) {
 #else
 void ulog_message(ulog_level_t severity, const char *file, int line, const char *fmt, ...) {
 #endif
+  if(quite) {
+    return;
+  }
   va_list ap;
   va_start(ap, fmt);
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)

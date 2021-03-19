@@ -63,6 +63,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef ULOG_H_
 #define ULOG_H_
 
+#include <stdbool.h>
 #include "ulog_config.h"
 
 #ifdef __cplusplus
@@ -84,6 +85,7 @@ typedef enum {
   #define ULOG_SUBSCRIBE(a, b) ulog_subscribe(a, b)
   #define ULOG_UNSUBSCRIBE(a) ulog_unsubscribe(a)
   #define ulog_level_name(a) ulog_level_name(a)
+  #define ulog_set_quite(a) ulog_set_quite(a)
   #if (ULOG_PRINT_FILE_LINE_INFO == 0)
     #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __VA_ARGS__)
     #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __VA_ARGS__)
@@ -105,6 +107,7 @@ typedef enum {
   #define ULOG_SUBSCRIBE(a, b)
   #define ULOG_UNSUBSCRIBE(a)
   #define ulog_level_name(a)
+  #define ulog_set_quite(a)
   #define ULOG_TRACE(f, ...)
   #define ULOG_DEBUG(f, ...)
   #define ULOG_INFO(f, ...)
@@ -129,6 +132,7 @@ void ulog_init();
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold);
 ulog_err_t ulog_unsubscribe(ulog_function_t fn);
 const char *ulog_level_name(ulog_level_t level);
+void ulog_set_quite(bool set);
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)
 void ulog_message(ulog_level_t severity, const char *fmt, ...);
 #else
