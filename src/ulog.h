@@ -63,6 +63,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef ULOG_H_
 #define ULOG_H_
 
+#include "ulog_config.h"
+
 #ifdef __cplusplus
 extern "C" {
     #endif
@@ -77,37 +79,38 @@ typedef enum {
   ULOG_LEVEL_N
 } ulog_level_t;
 
-// Unless ULOG_ENABLED is defined at compile time, all logging is disabled and
-// no logging code is generated.  To enable logging, uncomment the next line or
-// add -DULOG_ENABLED to your compiler switches.
-
-#define ULOG_ENABLED
-
 #ifdef ULOG_ENABLED
   #define ULOG_INIT() ulog_init()
   #define ULOG_SUBSCRIBE(a, b) ulog_subscribe(a, b)
   #define ULOG_UNSUBSCRIBE(a) ulog_unsubscribe(a)
   #define ulog_level_name(a) ulog_level_name(a)
-  #define ULOG(...) ulog_message(__VA_ARGS__)
-  #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __VA_ARGS__)
-  #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __VA_ARGS__)
-  #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __VA_ARGS__)
-  #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __VA_ARGS__)
-  #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __VA_ARGS__)
-  #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __VA_ARGS__)
+  #if (ULOG_PRINT_FILE_LINE_INFO == 0)
+    #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __VA_ARGS__)
+    #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __VA_ARGS__)
+    #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __VA_ARGS__)
+    #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __VA_ARGS__)
+    #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __VA_ARGS__)
+    #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __VA_ARGS__)
+  #else
+    #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+    #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+    #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+    #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+    #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+    #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #endif
 #else
   // uLog vanishes when disabled at compile time...
-  #define ULOG_INIT() do {} while(0)
-  #define ULOG_SUBSCRIBE(a, b) do {} while(0)
-  #define ULOG_UNSUBSCRIBE(a) do {} while(0)
-  #define ulog_level_name(a) do {} while(0)
-  #define ULOG(s, f, ...) do {} while(0)
-  #define ULOG_TRACE(f, ...) do {} while(0)
-  #define ULOG_DEBUG(f, ...) do {} while(0))
-  #define ULOG_INFO(f, ...) do {} while(0)
-  #define ULOG_WARNING(f, ...) do {} while(0)
-  #define ULOG_ERROR(f, ...) do {} while(0)
-  #define ULOG_CRITICAL(f, ...) do {} while(0)
+  #define ULOG_INIT()
+  #define ULOG_SUBSCRIBE(a, b)
+  #define ULOG_UNSUBSCRIBE(a)
+  #define ulog_level_name(a)
+  #define ULOG_TRACE(f, ...)
+  #define ULOG_DEBUG(f, ...)
+  #define ULOG_INFO(f, ...)
+  #define ULOG_WARNING(f, ...)
+  #define ULOG_ERROR(f, ...)
+  #define ULOG_CRITICAL(f, ...)
 #endif
 
 typedef enum {
@@ -116,22 +119,22 @@ typedef enum {
   ULOG_ERR_NOT_SUBSCRIBED,
 } ulog_err_t;
 
-// define the maximum number of concurrent subscribers
-#define ULOG_MAX_SUBSCRIBERS 6
-
-// maximum length of formatted log message
-#define ULOG_MAX_MESSAGE_LENGTH 128
-
 /**
  * @brief: prototype for uLog subscribers.
  */
 typedef void (*ulog_function_t)(ulog_level_t severity, char *msg);
 
+#ifdef ULOG_ENABLED
 void ulog_init();
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold);
 ulog_err_t ulog_unsubscribe(ulog_function_t fn);
 const char *ulog_level_name(ulog_level_t level);
+#if (ULOG_PRINT_FILE_LINE_INFO == 0)
 void ulog_message(ulog_level_t severity, const char *fmt, ...);
+#else
+void ulog_message(ulog_level_t severity, const char *file, int line, const char *fmt, ...);
+#endif
+#endif
 
 #ifdef __cplusplus
 }

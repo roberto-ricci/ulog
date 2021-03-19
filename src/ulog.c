@@ -30,6 +30,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 #include "ulog.h"
+#include "ulog_config.h"
 
 #ifdef ULOG_ENABLED  // whole file...
 
@@ -105,10 +106,21 @@ const char *ulog_level_name(ulog_level_t severity) {
   }
 }
 
+#if (ULOG_PRINT_FILE_LINE_INFO == 0)
 void ulog_message(ulog_level_t severity, const char *fmt, ...) {
+#else
+void ulog_message(ulog_level_t severity, const char *file, int line, const char *fmt, ...) {
+#endif
   va_list ap;
   va_start(ap, fmt);
+#if (ULOG_PRINT_FILE_LINE_INFO == 0)
   vsnprintf(s_message, ULOG_MAX_MESSAGE_LENGTH, fmt, ap);
+#else
+  int len = snprintf(s_message, ULOG_MAX_MESSAGE_LENGTH, "%s:%d ", file, line);
+  if((ULOG_MAX_MESSAGE_LENGTH - len) > 0) {
+    vsnprintf(&s_message[len], ULOG_MAX_MESSAGE_LENGTH-len, fmt, ap);
+  }
+#endif
   va_end(ap);
 
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
