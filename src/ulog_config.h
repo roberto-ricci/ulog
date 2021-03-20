@@ -3,8 +3,11 @@
 
 // Unless ULOG_ENABLED is defined at compile time, all logging is disabled and
 // no logging code is generated.  To enable logging, uncomment the next line or
-// add -DULOG_ENABLED to your compiler switches.
-#define ULOG_ENABLED
+// add -DULOG_ENABLED=1 to your compiler switches.
+#ifndef ULOG_ENABLED
+  #define ULOG_ENABLED 1
+#endif
+
 
 // define the maximum number of concurrent subscribers
 #define ULOG_MAX_SUBSCRIBERS 6

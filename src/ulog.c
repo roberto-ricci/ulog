@@ -32,7 +32,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "ulog.h"
 #include "ulog_config.h"
 
-#ifdef ULOG_ENABLED  // whole file...
+#if (ULOG_ENABLED == 1)  // whole file...
 
 #include <stdio.h>
 #include <string.h>
@@ -50,17 +50,20 @@ typedef struct {
 // =============================================================================
 // local storage
 
-static subscriber_t s_subscribers[ULOG_MAX_SUBSCRIBERS];
-static char s_message[ULOG_MAX_MESSAGE_LENGTH];
-bool quite = false;
-ulog_lock_t lock_fn = NULL;
+static struct {
+  subscriber_t subscribers[ULOG_MAX_SUBSCRIBERS];
+  char msg[ULOG_MAX_MESSAGE_LENGTH];
+  bool quite;
+  ulog_lock_t lock_fn;
+} ulog_config;
+
 
 // =============================================================================
 // local functions
 
 static void lock(bool lock) {
-  if(lock_fn != NULL) {
-    lock_fn(lock);
+  if(ulog_config.lock_fn != NULL) {
+    ulog_config.lock_fn(lock);
   }
 }
 
@@ -68,21 +71,24 @@ static void lock(bool lock) {
 // user-visible code
 
 void ulog_init() {
-  memset(s_subscribers, 0, sizeof(s_subscribers));
+  memset(ulog_config.subscribers, 0, sizeof(ulog_config.subscribers));
+  memset(ulog_config.msg, 0, ULOG_MAX_MESSAGE_LENGTH);
+  ulog_config.quite = false;
+  ulog_config.lock_fn = NULL;
 }
 
-// search the s_subscribers table to install or update fn
+// search the subscribers table to install or update fn
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold) {
   int available_slot = -1;
   lock(true);
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
-    if (s_subscribers[i].fn == fn) {
+    if (ulog_config.subscribers[i].fn == fn) {
       // already subscribed: update threshold and return immediately.
-      s_subscribers[i].threshold = threshold;
+      ulog_config.subscribers[i].threshold = threshold;
       lock(false);
       return ULOG_ERR_NONE;
 
-    } else if (s_subscribers[i].fn == NULL) {
+    } else if (ulog_config.subscribers[i].fn == NULL) {
       // found a free slot
       available_slot = i;
     }
@@ -92,19 +98,19 @@ ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold) {
     lock(false);
     return ULOG_ERR_SUBSCRIBERS_EXCEEDED;
   }
-  s_subscribers[available_slot].fn = fn;
-  s_subscribers[available_slot].threshold = threshold;
+  ulog_config.subscribers[available_slot].fn = fn;
+  ulog_config.subscribers[available_slot].threshold = threshold;
   lock(false);
   return ULOG_ERR_NONE;
 }
 
-// search the s_subscribers table to remove
+// search the subscribers table to remove
 ulog_err_t ulog_unsubscribe(ulog_function_t fn) {
   ulog_err_t ret = ULOG_ERR_NOT_SUBSCRIBED;
   lock(true);
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
-    if (s_subscribers[i].fn == fn) {
-      s_subscribers[i].fn = NULL;    // mark as empty
+    if (ulog_config.subscribers[i].fn == fn) {
+      ulog_config.subscribers[i].fn = NULL;    // mark as empty
       ret = ULOG_ERR_NONE;
       break;
     }
@@ -114,7 +120,7 @@ ulog_err_t ulog_unsubscribe(ulog_function_t fn) {
 }
 
 void ulog_set_lock(ulog_lock_t lock_fn) {
-  lock_fn = lock_fn;
+  ulog_config.lock_fn = lock_fn;
 }
 
 const char *ulog_level_name(ulog_level_t severity) {
@@ -130,7 +136,7 @@ const char *ulog_level_name(ulog_level_t severity) {
 }
 
 void ulog_set_quite(bool set) {
-  quite = set;
+  ulog_config.quite = set;
 }
 
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)
@@ -138,26 +144,26 @@ void ulog_message(ulog_level_t severity, const char *fmt, ...) {
 #else
 void ulog_message(ulog_level_t severity, const char *file, int line, const char *fmt, ...) {
 #endif
-  if(quite) {
+  if(ulog_config.quite) {
     return;
   }
   lock(true);
   va_list ap;
   va_start(ap, fmt);
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)
-  vsnprintf(s_message, ULOG_MAX_MESSAGE_LENGTH, fmt, ap);
+  vsnprintf(ulog_config.msg, ULOG_MAX_MESSAGE_LENGTH, fmt, ap);
 #else
-  int len = snprintf(s_message, ULOG_MAX_MESSAGE_LENGTH, "%s:%d ", file, line);
+  int len = snprintf(ulog_config.msg, ULOG_MAX_MESSAGE_LENGTH, "%s:%d ", file, line);
   if((ULOG_MAX_MESSAGE_LENGTH - len) > 0) {
-    vsnprintf(&s_message[len], ULOG_MAX_MESSAGE_LENGTH-len, fmt, ap);
+    vsnprintf(&ulog_config.msg[len], ULOG_MAX_MESSAGE_LENGTH-len, fmt, ap);
   }
 #endif
   va_end(ap);
 
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
-    if (s_subscribers[i].fn != NULL) {
-      if (severity >= s_subscribers[i].threshold) {
-        s_subscribers[i].fn(severity, s_message);
+    if (ulog_config.subscribers[i].fn != NULL) {
+      if (severity >= ulog_config.subscribers[i].threshold) {
+        ulog_config.subscribers[i].fn(severity, ulog_config.msg);
       }
     }
   }

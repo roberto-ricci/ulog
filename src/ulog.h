@@ -80,7 +80,7 @@ typedef enum {
   ULOG_LEVEL_N
 } ulog_level_t;
 
-#ifdef ULOG_ENABLED
+#if (ULOG_ENABLED == 1)
   #define ULOG_INIT() ulog_init()
   #define ULOG_SUBSCRIBE(a, b) ulog_subscribe(a, b)
   #define ULOG_UNSUBSCRIBE(a) ulog_unsubscribe(a)
@@ -135,7 +135,7 @@ typedef void (*ulog_function_t)(ulog_level_t severity, char *msg);
 typedef void (*ulog_lock_t)(bool lock);
 
 
-#ifdef ULOG_ENABLED
+#if (ULOG_ENABLED == 1)
 void ulog_init();
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold);
 ulog_err_t ulog_unsubscribe(ulog_function_t fn);
