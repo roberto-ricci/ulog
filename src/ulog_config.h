@@ -13,8 +13,6 @@
 #define ULOG_MAX_SUBSCRIBERS 6
 // maximum length of formatted log message
 #define ULOG_MAX_MESSAGE_LENGTH 128
-// enable file and line info
-#define ULOG_PRINT_FILE_LINE_INFO 1
 
 
 #endif

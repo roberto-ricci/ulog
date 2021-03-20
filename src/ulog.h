@@ -87,21 +87,12 @@ typedef enum {
   #define ulog_level_name(a) ulog_level_name(a)
   #define ulog_set_quite(a) ulog_set_quite(a)
   #define ulog_set_lock(a) ulog_set_lock(a)
-  #if (ULOG_PRINT_FILE_LINE_INFO == 0)
-    #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __VA_ARGS__)
-    #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __VA_ARGS__)
-    #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __VA_ARGS__)
-    #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __VA_ARGS__)
-    #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __VA_ARGS__)
-    #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __VA_ARGS__)
-  #else
-    #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-    #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-    #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-    #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-    #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-    #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
-  #endif
+  #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #define ULOG_INFO(...) ulog_message(ULOG_INFO_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #define ULOG_WARNING(...) ulog_message(ULOG_WARNING_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #define ULOG_ERROR(...) ulog_message(ULOG_ERROR_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
+  #define ULOG_CRITICAL(...) ulog_message(ULOG_CRITICAL_LEVEL, __FILE__, __LINE__, __VA_ARGS__)
 #else
   // uLog vanishes when disabled at compile time...
   #define ULOG_INIT()
@@ -127,7 +118,7 @@ typedef enum {
 /**
  * @brief: prototype for uLog subscribers.
  */
-typedef void (*ulog_function_t)(ulog_level_t severity, char *msg);
+typedef void (*ulog_function_t)(ulog_level_t severity, const char *file, int line, char *msg);
 
 /**
  * @brief: prototype for lock function.
@@ -142,11 +133,7 @@ ulog_err_t ulog_unsubscribe(ulog_function_t fn);
 void ulog_set_lock(ulog_lock_t lock_fn);
 const char *ulog_level_name(ulog_level_t level);
 void ulog_set_quite(bool set);
-#if (ULOG_PRINT_FILE_LINE_INFO == 0)
-void ulog_message(ulog_level_t severity, const char *fmt, ...);
-#else
 void ulog_message(ulog_level_t severity, const char *file, int line, const char *fmt, ...);
-#endif
 #endif
 
 #ifdef __cplusplus
