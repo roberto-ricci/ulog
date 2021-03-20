@@ -86,6 +86,7 @@ typedef enum {
   #define ULOG_UNSUBSCRIBE(a) ulog_unsubscribe(a)
   #define ulog_level_name(a) ulog_level_name(a)
   #define ulog_set_quite(a) ulog_set_quite(a)
+  #define ulog_set_lock(a) ulog_set_lock(a)
   #if (ULOG_PRINT_FILE_LINE_INFO == 0)
     #define ULOG_TRACE(...) ulog_message(ULOG_TRACE_LEVEL, __VA_ARGS__)
     #define ULOG_DEBUG(...) ulog_message(ULOG_DEBUG_LEVEL, __VA_ARGS__)
@@ -108,6 +109,7 @@ typedef enum {
   #define ULOG_UNSUBSCRIBE(a)
   #define ulog_level_name(a)
   #define ulog_set_quite(a)
+  #define ulog_set_lock(a)
   #define ULOG_TRACE(f, ...)
   #define ULOG_DEBUG(f, ...)
   #define ULOG_INFO(f, ...)
@@ -127,10 +129,17 @@ typedef enum {
  */
 typedef void (*ulog_function_t)(ulog_level_t severity, char *msg);
 
+/**
+ * @brief: prototype for lock function.
+ */
+typedef void (*ulog_lock_t)(bool lock);
+
+
 #ifdef ULOG_ENABLED
 void ulog_init();
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold);
 ulog_err_t ulog_unsubscribe(ulog_function_t fn);
+void ulog_set_lock(ulog_lock_t lock_fn);
 const char *ulog_level_name(ulog_level_t level);
 void ulog_set_quite(bool set);
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)

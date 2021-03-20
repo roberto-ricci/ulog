@@ -53,6 +53,16 @@ typedef struct {
 static subscriber_t s_subscribers[ULOG_MAX_SUBSCRIBERS];
 static char s_message[ULOG_MAX_MESSAGE_LENGTH];
 bool quite = false;
+ulog_lock_t lock_fn = NULL;
+
+// =============================================================================
+// local functions
+
+static void lock(bool lock) {
+  if(lock_fn != NULL) {
+    lock_fn(lock);
+  }
+}
 
 // =============================================================================
 // user-visible code
@@ -64,10 +74,12 @@ void ulog_init() {
 // search the s_subscribers table to install or update fn
 ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold) {
   int available_slot = -1;
+  lock(true);
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
     if (s_subscribers[i].fn == fn) {
       // already subscribed: update threshold and return immediately.
       s_subscribers[i].threshold = threshold;
+      lock(false);
       return ULOG_ERR_NONE;
 
     } else if (s_subscribers[i].fn == NULL) {
@@ -77,22 +89,32 @@ ulog_err_t ulog_subscribe(ulog_function_t fn, ulog_level_t threshold) {
   }
   // fn is not yet a subscriber.  assign if possible.
   if (available_slot == -1) {
+    lock(false);
     return ULOG_ERR_SUBSCRIBERS_EXCEEDED;
   }
   s_subscribers[available_slot].fn = fn;
   s_subscribers[available_slot].threshold = threshold;
+  lock(false);
   return ULOG_ERR_NONE;
 }
 
 // search the s_subscribers table to remove
 ulog_err_t ulog_unsubscribe(ulog_function_t fn) {
+  ulog_err_t ret = ULOG_ERR_NOT_SUBSCRIBED;
+  lock(true);
   for (int i=0; i<ULOG_MAX_SUBSCRIBERS; i++) {
     if (s_subscribers[i].fn == fn) {
       s_subscribers[i].fn = NULL;    // mark as empty
-      return ULOG_ERR_NONE;
+      ret = ULOG_ERR_NONE;
+      break;
     }
   }
-  return ULOG_ERR_NOT_SUBSCRIBED;
+  lock(false);
+  return ret;
+}
+
+void ulog_set_lock(ulog_lock_t lock_fn) {
+  lock_fn = lock_fn;
 }
 
 const char *ulog_level_name(ulog_level_t severity) {
@@ -119,6 +141,7 @@ void ulog_message(ulog_level_t severity, const char *file, int line, const char 
   if(quite) {
     return;
   }
+  lock(true);
   va_list ap;
   va_start(ap, fmt);
 #if (ULOG_PRINT_FILE_LINE_INFO == 0)
@@ -138,6 +161,7 @@ void ulog_message(ulog_level_t severity, const char *file, int line, const char 
       }
     }
   }
+  lock(false);
 }
 
 // =============================================================================
